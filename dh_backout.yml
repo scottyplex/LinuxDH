@@ -1,7 +1,7 @@
 ---
 # This will search for any backups Ansible created durring remediation and implement it
 - name: VSPM DH Backout
-  hosts: VSPM_DH_Backout
+  hosts: DH_hosts_Backout
 
   vars:
     ssh_file: '/etc/ssh/ssh_config'
