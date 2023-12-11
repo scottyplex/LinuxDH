@@ -1,7 +1,7 @@
 ---
 # This will remove diffie-hellman-group1 (client) sshh_config and (server) sshd_config.
 - name: DH Remediation
-  hosts: VSPM_DH
+  hosts: DH_hosts
 
   tasks:
     - name: Adding good protocols to EOF of ssh.config
