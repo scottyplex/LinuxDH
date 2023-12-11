@@ -1,0 +1,62 @@
+---
+# This will search for any backups Ansible created durring remediation and implement it
+- name: VSPM DH Backout
+  hosts: VSPM_DH_Backout
+
+  vars:
+    ssh_file: '/etc/ssh/ssh_config'
+    sshd_file: '/etc/ssh/sshd_config'
+
+  tasks:
+    - name: "Find all backups for {{ ssh_file }}"
+      ansible.builtin.find:
+        recurse: no
+        path:
+          - "{{ ssh_file | dirname }}"
+        patterns:
+          - '{{ ssh_file | basename }}\..*~'
+        use_regex: true
+      register: find_backup
+
+    - name: Select the latest backup
+      ansible.builtin.set_fact:
+        latest_backup: "{{ (find_backup.files | sort(attribute='mtime') | last).path }}"
+
+    - name: Show the latest backup
+      ansible.builtin.debug:
+        var: latest_backup
+
+    - name: "Restore latest backup of {{ ssh_file }}"
+      ansible.builtin.copy:
+        src: "{{ latest_backup }}"
+        remote_src: true
+        dest: "{{ ssh_file }}"
+
+    - name: "Find all backups for {{ sshd_file }}"
+      ansible.builtin.find:
+        recurse: no
+        path:
+          - "{{ sshd_file | dirname }}"
+        patterns:
+          - '{{ sshd_file | basename }}\..*~'
+        use_regex: true
+      register: find_backup2
+
+    - name: Select the latest backup
+      ansible.builtin.set_fact:
+        latest_backup2: "{{ (find_backup2.files | sort(attribute='mtime') | last).path }}"
+
+    - name: Show the latest backup
+      ansible.builtin.debug:
+        var: latest_backup2
+
+    - name: "Restore latest backup of {{ sshd_file }}"
+      ansible.builtin.copy:
+        src: "{{ latest_backup2 }}"
+        remote_src: true
+        dest: "{{ sshd_file }}"
+
+    - name: restart http service
+      ansible.builtin.service:
+       name: httpd
+       state: restarted
